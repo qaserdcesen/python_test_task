@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: flights_db_container
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+
+    volumes:
+          - db_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: flights_app_container
+    depends_on:
+      - db
+    command: >
+      bash -c "./wait-for-it.sh db:5432 --
+               python init_db.py &&
+               python main.py"
+
+    environment:
+      API_KEY: ${API_KEY}
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: "5432"
+
+volumes:
+  db_data:
